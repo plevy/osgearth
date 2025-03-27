@@ -23,6 +23,7 @@
 #include "Registry"
 #include "ShaderGenerator"
 #include "Style"
+#include "NetworkMonitor"
 #include <osg/BlendFunc>
 
 using namespace osgEarth;
@@ -74,6 +75,8 @@ unsigned TiledModelLayer::getMaxLevel() const
 osg::ref_ptr<osg::Node>
 TiledModelLayer::createTile(const TileKey& key, ProgressCallback* progress) const
 {
+    NetworkMonitor::ScopedRequestLayer layerRequest(getName());
+
     osg::ref_ptr<osg::Node> result;
 
     // check the L2 cache
@@ -253,6 +256,8 @@ TiledModelLayer::removedFromMap(const Map* map)
 
 void TiledModelLayer::dirty()
 {
+    super::dirty();
+
     _graphDirty = true;
 
     // create the scene graph
@@ -280,6 +285,11 @@ void TiledModelLayer::init()
 
 Status TiledModelLayer::closeImplementation()
 {
+    {
+        ScopedWriteLock lock(_localcacheMutex);
+        _localcache.clear();
+    }
+
     _root->removeChildren(0, _root->getNumChildren());
     return Status::NoError;
 }

@@ -69,6 +69,7 @@
 #include <osgEarthProcedural/TextureSplattingLayer>
 #include <osgEarthProcedural/VegetationLayer>
 #include <osgEarthProcedural/BiomeLayer>
+#include <osgEarthProcedural/BridgeLayer>
 #endif
 
 namespace osgEarth
@@ -163,9 +164,9 @@ namespace osgEarth
                 {
                     bool open = ImGui::TreeNodeEx(layer->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen);
                     ImGui::TableNextColumn();
-                    ImGui::TextDisabled(layer->getTitle().c_str());
+                    ImGui::TextDisabled("%s", layer->getTitle().c_str());
                     ImGui::TableNextColumn();
-                    ImGui::Text(layer->getAbstract().c_str());
+                    ImGui::Text("%s", layer->getAbstract().c_str());
                     if (open)
                     {
                         for (auto& l : layer->getLayers())
@@ -189,9 +190,9 @@ namespace osgEarth
                         strcpy(name, selectedWMSLayer->getTitle().c_str());
                     }
                     ImGui::TableNextColumn();
-                    ImGui::Text(layer->getTitle().c_str());
+                    ImGui::Text("%s", layer->getTitle().c_str());
                     ImGui::TableNextColumn();
-                    ImGui::Text(layer->getAbstract().c_str());
+                    ImGui::Text("%s", layer->getAbstract().c_str());
                 }
             }
 
@@ -544,12 +545,12 @@ namespace osgEarth
                 // Map name:
                 if (_mapNode->getMap()->getName().empty() == false)
                 {
-                    ImGui::TextColored(ImVec4(1, 1, 0, 1), _mapNode->getMap()->getName().c_str());
+                    ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", _mapNode->getMap()->getName().c_str());
                 }
 
                 ImGui::SameLine();
 
-                ImGui::Text("(%d)", _layers.size());
+                ImGui::Text("(%d)", (int)_layers.size());
                 ImGui::SameLine();
 
                 if (ImGui::Checkbox("Sort", &_sortByCat))
@@ -628,6 +629,8 @@ namespace osgEarth
                         dynamic_cast<osgEarth::Procedural::TextureSplattingLayer*>(layer.get()) ||
                         dynamic_cast<osgEarth::Procedural::BiomeLayer*>(layer.get()))
                         _layersByCat[PROCEDURAL].push_back(layer);
+                    else if (dynamic_cast<osgEarth::Procedural::BridgeLayer*>(layer.get()))
+                        _layersByCat[FEATURE].push_back(layer);                    
                     else
 #endif
                         if (dynamic_cast<ImageLayer*>(layer.get()) || dynamic_cast<ContourMapLayer*>(layer.get()))
@@ -717,7 +720,7 @@ namespace osgEarth
                 }
                 else
                 {
-                    ImGui::Text(layer->getName().c_str());
+                    ImGui::Text("%s", layer->getName().c_str());
                 }
 
                 if (_layerExpanded[layer])
@@ -1016,7 +1019,7 @@ namespace osgEarth
                                 else
                                 {
                                     ImGui::Text("  (searching)");
-                                    ImGui::Text("");
+                                    ImGui::Text(" ");
                                 }
                             }
                         }
@@ -1098,7 +1101,7 @@ namespace osgEarth
 
                     else if (layer->getStatus().isError() && layer->getStatus().message() != "Layer closed")
                     {
-                        ImGui::TextWrapped(layer->getStatus().message().c_str());
+                        ImGui::TextWrapped("%s", layer->getStatus().message().c_str());
                     }
 
                     ImGui::Unindent();
@@ -1278,14 +1281,15 @@ namespace osgEarth
                 // Debug tiles
                 if (ImGui::MenuItem("Debug tiles (map profile)"))
                 {
-                    DebugImageLayer* debugImage = new DebugImageLayer;
+                    DebugImageLayer* debugImage = new DebugImageLayer();
                     debugImage->setName("Debug tiles (Map profile)");
                     _mapNode->getMap()->addLayer(debugImage);
                 }
 
                 if (ImGui::MenuItem("Debug tiles (Mercator)"))
                 {
-                    DebugImageLayer* debugImage = new DebugImageLayer(ProfileOptions("spherical-mercator"));
+                    DebugImageLayer* debugImage = new DebugImageLayer();
+                    debugImage->setProfile(Profile::create(Profile::SPHERICAL_MERCATOR));
                     debugImage->setName("Debug tiles (Mercator)");
                     _mapNode->getMap()->addLayer(debugImage);
                 }

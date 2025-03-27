@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #include <osgEarth/TiledFeatureModelLayer>
-#include <osgEarth/NetworkMonitor>
 #include <osgEarth/Registry>
 #include <osgEarth/FeatureStyleSorter>
 
@@ -246,8 +245,6 @@ TiledFeatureModelLayer::createTileImplementation(const TileKey& key, ProgressCal
     if (progress && progress->isCanceled())
         return nullptr;
 
-    NetworkMonitor::ScopedRequestLayer layerRequest(getName());
-
     // Get features for this key
     // set up for feature indexing if appropriate:
     osg::ref_ptr<FeatureSourceIndexNode> index = 0L;
@@ -302,7 +299,7 @@ TiledFeatureModelLayer::createTileImplementation(const TileKey& key, ProgressCal
             }
         };
 
-    FeatureStyleSorter().sort(key, {}, _session.get(), _filters, compile, progress);
+    FeatureStyleSorter().sort(key, {}, _session.get(), _filters, nullptr, compile, progress);
 
     if (group->getNumChildren() == 0 || group->getBound().valid() == false)
     {
